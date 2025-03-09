@@ -10,41 +10,39 @@
             text-align: center;
             background-color: #121212;
             color: white;
-            margin: 20px;
+            margin: 50px;
         }
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
             background-color: #1e1e1e;
-            padding: 15px;
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-            max-width: 90%;
+            max-width: 600px;
             margin: auto;
         }
         .sortable {
             display: flex;
-            gap: 5px;
+            gap: 10px;
+            cursor: grab;
             flex-wrap: wrap;
             justify-content: center;
         }
         .box {
-            padding: 10px;
+            padding: 20px;
             border: 1px solid white;
             background-color: #333;
             border-radius: 5px;
             font-size: 18px;
             transition: 0.3s;
-            width: 50px;
-            text-align: center;
-            cursor: pointer;
         }
         .box:hover {
             background-color: #444;
         }
         button {
-            margin-top: 10px;
+            margin-top: 20px;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
@@ -65,7 +63,7 @@
             transform: translate(-50%, -50%);
             background-color: #007bff;
             color: white;
-            padding: 15px;
+            padding: 20px;
             border-radius: 10px;
             text-align: center;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
@@ -73,13 +71,13 @@
         .custom-alert button {
             background-color: black;
             color: white;
-            margin-top: 5px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Tahap 3 & 4: Sorting Game</h1>
+        <h1>Tahap 3 & 4: Implementasi & Pengujian</h1>
         <p>Urutkan angka berikut dari yang terkecil ke terbesar menggunakan metode Bubble Sort.</p>
         <div class="sortable" id="sortable"></div>
         <p>Langkah: <span id="step-counter">0</span></p>
@@ -100,7 +98,6 @@
         const stepCounter = document.getElementById("step-counter");
         const alertBox = document.getElementById("alert-box");
         const alertText = document.getElementById("alert-text");
-        let draggedElement = null;
 
         function renderNumbers() {
             container.innerHTML = "";
@@ -109,30 +106,36 @@
                 div.textContent = num;
                 div.className = "box";
                 div.draggable = true;
-                div.addEventListener("dragstart", dragStart);
-                div.addEventListener("touchstart", touchStart);
-                div.addEventListener("touchmove", touchMove);
-                div.addEventListener("touchend", touchEnd);
+                div.ondragstart = drag;
                 container.appendChild(div);
             });
         }
 
-        function dragStart(ev) {
-            draggedElement = ev.target;
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.textContent);
         }
 
-        function touchStart(ev) {
-            draggedElement = ev.target;
-        }
+        container.addEventListener("touchstart", (ev) => {
+            const touch = ev.touches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (target && target.classList.contains("box")) {
+                ev.dataTransfer.setData("text", target.textContent);
+            }
+        });
 
-        function touchMove(ev) {
+        container.addEventListener("touchmove", (ev) => {
             ev.preventDefault();
-            let touch = ev.touches[0];
-            let element = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (element && element.classList.contains("box") && element !== draggedElement) {
-                let draggedIndex = numbers.indexOf(parseInt(draggedElement.textContent));
-                let targetIndex = numbers.indexOf(parseInt(element.textContent));
-                if (draggedIndex !== -1 && targetIndex !== -1) {
+        });
+
+        container.addEventListener("touchend", (ev) => {
+            ev.preventDefault();
+            const touch = ev.changedTouches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (target && target.classList.contains("box")) {
+                let draggedData = ev.dataTransfer.getData("text");
+                let draggedIndex = numbers.indexOf(parseInt(draggedData));
+                let targetIndex = Array.from(container.children).indexOf(target);
+                if (targetIndex !== -1 && draggedIndex !== targetIndex) {
                     [numbers[draggedIndex], numbers[targetIndex]] = [numbers[targetIndex], numbers[draggedIndex]];
                     langkah++;
                     stepCounter.textContent = langkah;
@@ -140,11 +143,22 @@
                     renderNumbers();
                 }
             }
-        }
+        });
 
-        function touchEnd() {
-            draggedElement = null;
-        }
+        container.ondragover = (ev) => ev.preventDefault();
+        container.ondrop = (ev) => {
+            ev.preventDefault();
+            let draggedData = ev.dataTransfer.getData("text");
+            let draggedIndex = numbers.indexOf(parseInt(draggedData));
+            let targetIndex = Array.from(container.children).indexOf(ev.target);
+            if (targetIndex !== -1 && draggedIndex !== targetIndex) {
+                [numbers[draggedIndex], numbers[targetIndex]] = [numbers[targetIndex], numbers[draggedIndex]];
+                langkah++;
+                stepCounter.textContent = langkah;
+                localStorage.setItem("steps", langkah);
+                renderNumbers();
+            }
+        };
 
         function checkSorting() {
             if (JSON.stringify(numbers) === JSON.stringify([...numbers].sort((a, b) => a - b))) {
