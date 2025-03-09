@@ -26,7 +26,6 @@
         .sortable {
             display: flex;
             gap: 5px;
-            cursor: grab;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -35,18 +34,19 @@
             border: 1px solid white;
             background-color: #333;
             border-radius: 5px;
-            font-size: 14px;
+            font-size: 18px;
             transition: 0.3s;
-            width: 40px;
+            width: 50px;
             text-align: center;
+            cursor: pointer;
         }
         .box:hover {
             background-color: #444;
         }
         button {
             margin-top: 10px;
-            padding: 8px 15px;
-            font-size: 14px;
+            padding: 10px 20px;
+            font-size: 16px;
             cursor: pointer;
             background-color: #007bff;
             color: white;
@@ -100,6 +100,7 @@
         const stepCounter = document.getElementById("step-counter");
         const alertBox = document.getElementById("alert-box");
         const alertText = document.getElementById("alert-text");
+        let draggedElement = null;
 
         function renderNumbers() {
             container.innerHTML = "";
@@ -108,29 +109,42 @@
                 div.textContent = num;
                 div.className = "box";
                 div.draggable = true;
-                div.ondragstart = drag;
+                div.addEventListener("dragstart", dragStart);
+                div.addEventListener("touchstart", touchStart);
+                div.addEventListener("touchmove", touchMove);
+                div.addEventListener("touchend", touchEnd);
                 container.appendChild(div);
             });
         }
 
-        function drag(ev) {
-            ev.dataTransfer.setData("text", ev.target.textContent);
+        function dragStart(ev) {
+            draggedElement = ev.target;
         }
 
-        container.ondragover = (ev) => ev.preventDefault();
-        container.ondrop = (ev) => {
+        function touchStart(ev) {
+            draggedElement = ev.target;
+        }
+
+        function touchMove(ev) {
             ev.preventDefault();
-            let draggedData = ev.dataTransfer.getData("text");
-            let draggedIndex = numbers.indexOf(parseInt(draggedData));
-            let targetIndex = Array.from(container.children).indexOf(ev.target);
-            if (targetIndex !== -1 && draggedIndex !== targetIndex) {
-                [numbers[draggedIndex], numbers[targetIndex]] = [numbers[targetIndex], numbers[draggedIndex]];
-                langkah++;
-                stepCounter.textContent = langkah;
-                localStorage.setItem("steps", langkah);
-                renderNumbers();
+            let touch = ev.touches[0];
+            let element = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (element && element.classList.contains("box") && element !== draggedElement) {
+                let draggedIndex = numbers.indexOf(parseInt(draggedElement.textContent));
+                let targetIndex = numbers.indexOf(parseInt(element.textContent));
+                if (draggedIndex !== -1 && targetIndex !== -1) {
+                    [numbers[draggedIndex], numbers[targetIndex]] = [numbers[targetIndex], numbers[draggedIndex]];
+                    langkah++;
+                    stepCounter.textContent = langkah;
+                    localStorage.setItem("steps", langkah);
+                    renderNumbers();
+                }
             }
-        };
+        }
+
+        function touchEnd() {
+            draggedElement = null;
+        }
 
         function checkSorting() {
             if (JSON.stringify(numbers) === JSON.stringify([...numbers].sort((a, b) => a - b))) {
