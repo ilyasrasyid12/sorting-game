@@ -26,7 +26,6 @@
         .sortable {
             display: flex;
             gap: 10px;
-            cursor: grab;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -36,9 +35,10 @@
             background-color: #333;
             border-radius: 5px;
             font-size: 18px;
+            cursor: pointer;
             transition: 0.3s;
         }
-        .box:hover {
+        .box:hover, .selected {
             background-color: #444;
         }
         button {
@@ -94,6 +94,7 @@
     <script>
         let numbers = [5, 3, 8, 1, 2];
         let langkah = 0;
+        let firstSelected = null;
         const container = document.getElementById("sortable");
         const stepCounter = document.getElementById("step-counter");
         const alertBox = document.getElementById("alert-box");
@@ -101,64 +102,35 @@
 
         function renderNumbers() {
             container.innerHTML = "";
-            numbers.forEach(num => {
+            numbers.forEach((num, index) => {
                 let div = document.createElement("div");
                 div.textContent = num;
                 div.className = "box";
-                div.draggable = true;
-                div.ondragstart = drag;
+                div.onclick = () => selectNumber(index);
                 container.appendChild(div);
             });
         }
 
-        function drag(ev) {
-            ev.dataTransfer.setData("text", ev.target.textContent);
+        function selectNumber(index) {
+            if (firstSelected === null) {
+                firstSelected = index;
+                document.getElementsByClassName("box")[index].classList.add("selected");
+            } else {
+                swapNumbers(firstSelected, index);
+                document.getElementsByClassName("box")[firstSelected].classList.remove("selected");
+                firstSelected = null;
+            }
         }
 
-        container.addEventListener("touchstart", (ev) => {
-            const touch = ev.touches[0];
-            const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (target && target.classList.contains("box")) {
-                ev.dataTransfer.setData("text", target.textContent);
-            }
-        });
-
-        container.addEventListener("touchmove", (ev) => {
-            ev.preventDefault();
-        });
-
-        container.addEventListener("touchend", (ev) => {
-            ev.preventDefault();
-            const touch = ev.changedTouches[0];
-            const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (target && target.classList.contains("box")) {
-                let draggedData = ev.dataTransfer.getData("text");
-                let draggedIndex = numbers.indexOf(parseInt(draggedData));
-                let targetIndex = Array.from(container.children).indexOf(target);
-                if (targetIndex !== -1 && draggedIndex !== targetIndex) {
-                    [numbers[draggedIndex], numbers[targetIndex]] = [numbers[targetIndex], numbers[draggedIndex]];
-                    langkah++;
-                    stepCounter.textContent = langkah;
-                    localStorage.setItem("steps", langkah);
-                    renderNumbers();
-                }
-            }
-        });
-
-        container.ondragover = (ev) => ev.preventDefault();
-        container.ondrop = (ev) => {
-            ev.preventDefault();
-            let draggedData = ev.dataTransfer.getData("text");
-            let draggedIndex = numbers.indexOf(parseInt(draggedData));
-            let targetIndex = Array.from(container.children).indexOf(ev.target);
-            if (targetIndex !== -1 && draggedIndex !== targetIndex) {
-                [numbers[draggedIndex], numbers[targetIndex]] = [numbers[targetIndex], numbers[draggedIndex]];
+        function swapNumbers(i, j) {
+            if (i !== j) {
+                [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
                 langkah++;
                 stepCounter.textContent = langkah;
                 localStorage.setItem("steps", langkah);
                 renderNumbers();
             }
-        };
+        }
 
         function checkSorting() {
             if (JSON.stringify(numbers) === JSON.stringify([...numbers].sort((a, b) => a - b))) {
