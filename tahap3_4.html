@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tahap 3 & 4: Sorting Game</title>
+    <title>Tahap 5: Evaluasi Efisiensi</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -22,24 +22,6 @@
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
             max-width: 600px;
             margin: auto;
-        }
-        .sortable {
-            display: flex;
-            gap: 10px;
-            cursor: grab;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .box {
-            padding: 15px;
-            border: 1px solid white;
-            background-color: #333;
-            border-radius: 5px;
-            font-size: 18px;
-            transition: 0.3s;
-        }
-        .box:hover {
-            background-color: #444;
         }
         button {
             margin-top: 20px;
@@ -73,23 +55,18 @@
             color: white;
             margin-top: 10px;
         }
-        @media (max-width: 600px) {
-            .box {
-                font-size: 14px;
-                padding: 10px;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Tahap 3 & 4: Implementasi & Pengujian</h1>
-        <p>Urutkan angka berikut dari yang terkecil ke terbesar menggunakan metode Bubble Sort.</p>
-        <div class="sortable" id="sortable"></div>
-        <p>Langkah: <span id="step-counter">0</span></p>
-        <button onclick="checkSorting()">Cek Jawaban</button>
-        <button onclick="resetGame()">Ulang</button>
-        <button id="next-btn" onclick="nextStep()" style="display: none;">Lanjut ke Tahap 5</button>
+        <h1>Tahap 5: Evaluasi Efisiensi</h1>
+        <p>Apakah langkah yang Anda ambil sudah efisien sesuai target ideal?</p> 
+        <p>Target Langkah Ideal: 3</p>
+        <p>Total Langkah yang Anda Ambil: <span id="total-steps">0</span></p>
+        <p id="evaluation-text"></p>
+        
+        <button onclick="retrySorting()">Kembali ke Tahap 3 & 4</button>
+        <button onclick="finish()">Selesai</button>
     </div>
     
     <div id="alert-box" class="custom-alert">
@@ -98,92 +75,32 @@
     </div>
     
     <script>
-        let numbers = [5, 3, 8, 1, 2];
-        let langkah = 0;
-        const container = document.getElementById("sortable");
-        const stepCounter = document.getElementById("step-counter");
-        const alertBox = document.getElementById("alert-box");
-        const alertText = document.getElementById("alert-text");
-        let draggedIndex = null;
+        let steps = localStorage.getItem("totalLangkah") || 0;
+        document.getElementById("total-steps").textContent = steps;
+        let evaluationText = document.getElementById("evaluation-text");
 
-        function renderNumbers() {
-            container.innerHTML = "";
-            numbers.forEach((num, index) => {
-                let div = document.createElement("div");
-                div.textContent = num;
-                div.className = "box";
-                div.draggable = true;
-                div.setAttribute("data-index", index);
-                div.ondragstart = drag;
-                div.ontouchstart = touchStart;
-                div.ontouchend = touchEnd;
-                container.appendChild(div);
-            });
+        if (steps > 3) {
+            evaluationText.textContent = "Anda mengambil terlalu banyak langkah. Coba optimalkan strategi Anda dengan kembali ke Tahap 3 & 4.";
+        } else {
+            evaluationText.textContent = "Bagus! Anda sudah mencapai langkah yang efisien.";
         }
 
-        function drag(ev) {
-            draggedIndex = ev.target.getAttribute("data-index");
+        function retrySorting() {
+            window.location.href = "tahap3_4.html";
         }
 
-        function touchStart(ev) {
-            draggedIndex = ev.target.getAttribute("data-index");
-        }
-
-        function touchEnd(ev) {
-            let touch = ev.changedTouches[0];
-            let target = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (target && target.classList.contains("box")) {
-                let targetIndex = target.getAttribute("data-index");
-                swapElements(draggedIndex, targetIndex);
-            }
-        }
-
-        container.ondragover = (ev) => ev.preventDefault();
-        container.ondrop = (ev) => {
-            ev.preventDefault();
-            let targetIndex = ev.target.getAttribute("data-index");
-            swapElements(draggedIndex, targetIndex);
-        };
-
-        function swapElements(fromIndex, toIndex) {
-            if (fromIndex !== toIndex) {
-                [numbers[fromIndex], numbers[toIndex]] = [numbers[toIndex], numbers[fromIndex]];
-                langkah++;
-                stepCounter.textContent = langkah;
-                renderNumbers();
-            }
-        }
-
-        function checkSorting() {
-            if (JSON.stringify(numbers) === JSON.stringify([...numbers].sort((a, b) => a - b))) {
-                showAlert("Selamat! Sorting berhasil dengan " + langkah + " langkah.");
-                document.getElementById("next-btn").style.display = "block";
-            } else {
-                showAlert("Masih belum benar, coba periksa lagi!");
-            }
+        function finish() {
+            showAlert("Selamat! Anda telah menyelesaikan evaluasi dengan " + steps + " langkah.");
         }
 
         function showAlert(message) {
-            alertText.textContent = message;
-            alertBox.style.display = "block";
+            document.getElementById("alert-text").textContent = message;
+            document.getElementById("alert-box").style.display = "block";
         }
 
         function closeAlert() {
-            alertBox.style.display = "none";
+            document.getElementById("alert-box").style.display = "none";
         }
-
-        function resetGame() {
-            numbers = [5, 3, 8, 1, 2];
-            langkah = 0;
-            stepCounter.textContent = langkah;
-            renderNumbers();
-        }
-
-        function nextStep() {
-            window.location.href = "tahap5.html";
-        }
-
-        renderNumbers();
     </script>
 </body>
 </html>
